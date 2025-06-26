@@ -19,7 +19,34 @@
         "backgroundColor": "#ffffff"
       }
     },
-    "plugins": ["expo-sqlite"],
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "mode": "development",
+          "android": {
+            "icon": "./assets/notification-icon.png",
+            "color": "#4CAF50"
+          },
+          "ios": {
+            "allowCriticalAlerts": false,
+            "shouldSetBadge": true,
+            "shouldPlaySound": true
+          },
+          "shouldShowBanner": true,
+          "shouldShowList": true
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "notification": {
+      "iosDisplayInForeground": true,
+      "androidMode": "default",
+      "androidModeAdjacency": "overlap",
+      "shouldShowBanner": true,
+      "shouldShowList": true
+    },
     "extra": {
       "eas": {
         "projectId": "e4461ac9-12a5-41e2-8446-7620369c1071"

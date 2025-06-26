@@ -1,30 +1,23 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import AppNavigator from './src/navigation/AppNavigator';
+import { LogBox } from 'react-native';
+
 import { AuthProvider } from './src/context/AuthContext';
-import { initCategorias } from './src/services/categoriaService'; // 👈 IMPORTANTE
+import { ThemeProvider } from './src/context/ThemeContext';
+import RootNavigator from './src/navigation/RootNavigator';
+
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications...',
+]);
 
 export default function App() {
-  useEffect(() => {
-  console.log('App.js montado');
-
-  const iniciarBD = async () => {
-    try {
-      await initCategorias(); 
-      console.log('Tabla categorias inicializada correctamente');
-    } catch (error) {
-      console.error('Error al inicializar tabla categorias:', error);
-    }
-  };
-
-  iniciarBD();
-}, []);
-
   return (
     <AuthProvider>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
+      <ThemeProvider> 
+        <NavigationContainer>
+          <RootNavigator />
+        </NavigationContainer>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

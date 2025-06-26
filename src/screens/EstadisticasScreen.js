@@ -5,7 +5,7 @@ export default function EstadisticasScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>Estadísticas</Text>
-      <Text>Acá se mostrarán ños datos en forma de gráficos</Text>
+      <Text>Acá se mostrarán los datos en forma de gráficos</Text>
     </View>
   );
 }

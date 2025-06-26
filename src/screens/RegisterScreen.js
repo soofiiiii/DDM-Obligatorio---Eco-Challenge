@@ -1,14 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert, StyleSheet, Image } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { insertUser, emailExists } from '../services/userService';
+import React, { useState, useContext } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  Alert,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import Icon from "react-native-vector-icons/FontAwesome";
+
+import {
+  insertUser,
+  emailExists,
+  loginUsuario,
+} from "../services/userService";
+import { AuthContext } from "../context/AuthContext";
+import styles from "./RegisterStyles";
 
 export default function RegisterScreen() {
-  const [nombre, setNombre] = useState('');
-  const [email, setEmail] = useState('');
-  const [edad, setEdad] = useState('');
-  const [barrio, setBarrio] = useState('');
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [contrasena, setContrasena] = useState("");
+  const [repeatContrasena, setRepeatContrasena] = useState("");
+  const [barrio, setBarrio] = useState("");
   const [foto, setFoto] = useState(null);
+  const [fechaNacimiento, setFechaNacimiento] = useState(null);
+  const [mostrarDatePicker, setMostrarDatePicker] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordErrors, setPasswordErrors] = useState([]);
+  const { iniciarSesion } = useContext(AuthContext);
 
   const elegirFoto = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -21,37 +44,107 @@ export default function RegisterScreen() {
     }
   };
 
+  const validarEmail = (correo) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+
+  const calcularEdad = (fecha) => {
+    const hoy = new Date();
+    const nacimiento = new Date(fecha);
+    let edad = hoy.getFullYear() - nacimiento.getFullYear();
+    const m = hoy.getMonth() - nacimiento.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) edad--;
+    return edad;
+  };
+
+  const checkPasswordStrength = (password) => {
+    let strength = 0;
+    const errors = [];
+
+    if (password.length >= 8) strength++; else errors.push("Debe tener al menos 8 caracteres.");
+    if (/[A-Z]/.test(password)) strength++; else errors.push("Debe contener una mayúscula.");
+    if (/[a-z]/.test(password)) strength++; else errors.push("Debe contener una minúscula.");
+    if (/[0-9]/.test(password)) strength++; else errors.push("Debe contener un número.");
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength++; else errors.push("Debe tener un carácter especial.");
+
+    setPasswordStrength(strength);
+    setPasswordErrors(errors);
+  };
+
+  const getStrengthBarColor = () => {
+    switch (passwordStrength) {
+      case 1: return '#FF0000';
+      case 2: return '#FF8C00';
+      case 3: return '#FFD700';
+      case 4: return '#ADFF2F';
+      case 5: return '#4CAF50';
+      default: return '#E0E0E0';
+    }
+  };
+
+  const getStrengthBarWidth = () => `${(passwordStrength / 5) * 100}%`;
+
   const validarYRegistrar = async () => {
-    if (!nombre || !email || !edad || !barrio) {
-      Alert.alert('Error', 'Todos los campos son obligatorios.');
+    if (!nombre.trim() || !email.trim() || !barrio.trim() || !fechaNacimiento) {
+      Alert.alert("Error", "Todos los campos son obligatorios.");
       return;
     }
 
-    const existe = await emailExists(email);
-    if (existe) {
-      Alert.alert('Error', 'El correo ya está registrado.');
+    if (!validarEmail(email.trim())) {
+      Alert.alert("Error", "Correo electrónico inválido.");
+      return;
+    }
+
+    const edadCalculada = calcularEdad(fechaNacimiento);
+    if (edadCalculada < 13 || edadCalculada > 100) {
+      Alert.alert("Error", "Lo sentimos, esta app está pensada para mayores de 13 años.");
+      return;
+    }
+
+    if (!foto) {
+      Alert.alert("Error", "Debes seleccionar una foto de perfil.");
+      return;
+    }
+
+    if (emailExists(email.trim())) {
+      Alert.alert("Error", "Ese correo ya está registrado.");
+      return;
+    }
+
+    if (contrasena.trim() === "") {
+      Alert.alert("Error", "La contraseña no puede estar vacía.");
+      return;
+    }
+
+    if (passwordErrors.length > 0) {
+      Alert.alert("Error", "La contraseña tiene errores:\n" + passwordErrors.join("\n"));
+      return;
+    }
+
+    if (contrasena !== repeatContrasena) {
+      Alert.alert("Error", "Las contraseñas no coinciden.");
       return;
     }
 
     const nuevoUsuario = {
-      nombre,
-      email,
-      edad: parseInt(edad),
-      barrio,
-      foto: foto ?? ''
+      nombre: nombre.trim(),
+      email: email.trim(),
+      edad: edadCalculada,
+      barrio: barrio.trim(),
+      foto,
+      contrasena: contrasena.trim(),
     };
 
-    const exito = await insertUser(nuevoUsuario);
+    const exito = insertUser(nuevoUsuario);
+
     if (exito) {
-      Alert.alert('Éxito', 'Usuario registrado con éxito.');
-      // Limpiar los campos luego del registro
-      setNombre('');
-      setEmail('');
-      setEdad('');
-      setBarrio('');
-      setFoto(null);
+      const usuarioLogueado = loginUsuario(nuevoUsuario.email, nuevoUsuario.contrasena);
+      if (usuarioLogueado) {
+        await iniciarSesion(usuarioLogueado);
+        Alert.alert("Bienvenido", `Registrado como ${usuarioLogueado.nombre}`);
+      } else {
+        Alert.alert("Registro exitoso", "No se pudo iniciar sesión automáticamente.");
+      }
     } else {
-      Alert.alert('Error', 'No se pudo guardar el usuario.');
+      Alert.alert("Error", "No se pudo registrar el usuario.");
     }
   };
 
@@ -64,53 +157,111 @@ export default function RegisterScreen() {
         placeholder="Nombre completo"
         value={nombre}
         onChangeText={setNombre}
+        placeholderTextColor={styles.input.borderColor}
       />
       <TextInput
         style={styles.input}
         placeholder="Email"
         keyboardType="email-address"
+        autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
+        placeholderTextColor={styles.input.borderColor}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Edad"
-        keyboardType="numeric"
-        value={edad}
-        onChangeText={setEdad}
-      />
+
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Contraseña"
+          secureTextEntry={!showPassword}
+          value={contrasena}
+          onChangeText={(text) => {
+            setContrasena(text);
+            checkPasswordStrength(text);
+          }}
+          placeholderTextColor={styles.input.borderColor}
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+          style={styles.eyeIcon}
+        >
+          <Icon name={showPassword ? "eye" : "eye-slash"} size={20} color="#888" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.passwordStrengthBarContainer}>
+        <View style={[styles.passwordStrengthBar, {
+          width: getStrengthBarWidth(),
+          backgroundColor: getStrengthBarColor(),
+        }]} />
+      </View>
+
+      {passwordErrors.map((error, index) => (
+        <Text key={index} style={styles.passwordErrorText}>{error}</Text>
+      ))}
+
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Repetir Contraseña"
+          secureTextEntry={!showPassword}
+          value={repeatContrasena}
+          onChangeText={setRepeatContrasena}
+          placeholderTextColor={styles.input.borderColor}
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword(!showPassword)}
+          style={styles.eyeIcon}
+        >
+          <Icon name={showPassword ? "eye" : "eye-slash"} size={20} color="#888" />
+        </TouchableOpacity>
+      </View>
+
+      {contrasena !== repeatContrasena && repeatContrasena !== "" && (
+        <Text style={styles.passwordErrorText}>Las contraseñas no coinciden.</Text>
+      )}
+
+      <TouchableOpacity style={styles.datePickerButton} onPress={() => setMostrarDatePicker(true)}>
+        <Text style={styles.datePickerText}>
+          {fechaNacimiento
+            ? new Date(fechaNacimiento).toLocaleDateString()
+            : "Seleccionar fecha de nacimiento"}
+        </Text>
+      </TouchableOpacity>
+
+      {mostrarDatePicker && (
+        <DateTimePicker
+          value={fechaNacimiento ? new Date(fechaNacimiento) : new Date()}
+          mode="date"
+          display="spinner"
+          onChange={(event, selectedDate) => {
+            setMostrarDatePicker(false);
+            if (selectedDate) {
+              setFechaNacimiento(selectedDate.toISOString());
+            }
+          }}
+        />
+      )}
+
       <TextInput
         style={styles.input}
         placeholder="Barrio"
         value={barrio}
         onChangeText={setBarrio}
+        placeholderTextColor={styles.input.borderColor}
       />
 
-      <Button title="Elegir foto de perfil" onPress={elegirFoto} />
+      <TouchableOpacity style={styles.photoPickerButton} onPress={elegirFoto}>
+        <Text style={styles.photoPickerButtonText}>Elegir foto de perfil</Text>
+      </TouchableOpacity>
+
       {foto && <Image source={{ uri: foto }} style={styles.foto} />}
 
-      <View style={{ marginTop: 20 }}>
-        <Button title="Registrarse" onPress={validarYRegistrar} />
+      <View style={styles.registerButtonContainer}>
+        <TouchableOpacity style={styles.registerButton} onPress={validarYRegistrar}>
+          <Text style={styles.registerButtonText}>Registrarse</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 24, marginBottom: 20, textAlign: 'center' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 10
-  },
-  foto: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginTop: 10,
-    alignSelf: 'center'
-  }
-});

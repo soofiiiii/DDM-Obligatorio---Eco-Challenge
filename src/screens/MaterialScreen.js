@@ -31,15 +31,25 @@ export default function MaterialScreen() {
   };
 
   const guardarMaterial = async () => {
-    if (!nombre || !categoria) {
-      Alert.alert('Error', 'Todos los campos son obligatorios.');
+    if (!nombre.trim()) {
+      Alert.alert('Error', 'El nombre del material es obligatorio.');
+      return;
+    }
+
+    if (!categoria) {
+      Alert.alert('Error', 'Debes seleccionar una categoría.');
+      return;
+    }
+
+    if (!imagen) {
+      Alert.alert('Error', 'Debes seleccionar una imagen de ejemplo.');
       return;
     }
 
     const material = {
-      nombre,
+      nombre: nombre.trim(),
       categoria,
-      imagen: imagen ?? ''
+      imagen
     };
 
     const exito = await insertMaterial(material);

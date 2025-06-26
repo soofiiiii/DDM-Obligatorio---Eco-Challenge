@@ -1,0 +1,22 @@
+export const MARCOS_DISPONIBLES = [
+  { id: 1, nombre: "1000P", archivo: require('../../assets/frames/1000P.png'), precio: 1000 },
+  { id: 2, nombre: "20P", archivo: require('../../assets/frames/20P.png'), precio: 20 },
+  { id: 3, nombre: "Arte", archivo: require('../../assets/frames/Arte.png'), precio: 150 },
+  { id: 4, nombre: "Azul", archivo: require('../../assets/frames/Azul.png'), precio: 100 },
+  { id: 5, nombre: "Dorado", archivo: require('../../assets/frames/Dorado.png'), precio: 300 },
+  { id: 6, nombre: "Furro", archivo: require('../../assets/frames/Furro.png'), precio: 250 },
+  { id: 7, nombre: "Gatos", archivo: require('../../assets/frames/Gatos.png'), precio: 200 },
+  { id: 8, nombre: "Jupiter", archivo: require('../../assets/frames/Jupiter.png'), precio: 180 },
+  { id: 9, nombre: "Lila", archivo: require('../../assets/frames/Lila.png'), precio: 120 },
+  { id: 10, nombre: "Natural", archivo: require('../../assets/frames/Natural.png'), precio: 80 },
+  { id: 11, nombre: "Oro", archivo: require('../../assets/frames/Oro.png'), precio: 300 },
+  { id: 12, nombre: "Pirata", archivo: require('../../assets/frames/Pirata.png'), precio: 160 },
+  { id: 13, nombre: "PrimerRetoGif", archivo: require('../../assets/frames/PrimerRetoGif.png'), precio: 50 },
+  { id: 14, nombre: "Rojo", archivo: require('../../assets/frames/Rojo.png'), precio: 100 },
+  { id: 15, nombre: "Top 1", archivo: require('../../assets/frames/top1.png'), precio: 500 },
+  { id: 16, nombre: "Top 2", archivo: require('../../assets/frames/top2.png'), precio: 400 },
+  { id: 17, nombre: "Top 3", archivo: require('../../assets/frames/top3.png'), precio: 300 },
+  { id: 18, nombre: "Top 4", archivo: require('../../assets/frames/top4.png'), precio: 200 },
+  { id: 19, nombre: "Top 5", archivo: require('../../assets/frames/top5.png'), precio: 100 },
+  { id: 20, nombre: "Violeta", archivo: require('../../assets/frames/Violeta.png'), precio: 80 }
+];
