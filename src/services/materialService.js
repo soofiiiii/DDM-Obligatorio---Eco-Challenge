@@ -17,13 +17,24 @@ export const initMateriales = () => {
   }
 };
 
-export const getMateriales = () => {
+export const getMateriales = (limit = 10, offset = 0, searchTerm = "") => {
   const db = getDatabase();
-  try {
-    const rows = db.getAllSync('SELECT * FROM materiales;');
+   try {
+    let query = "SELECT * FROM materiales";
+    const params = [];
+
+    if (searchTerm) {
+      query += " WHERE LOWER(nombre) LIKE ?";
+      params.push(`%${searchTerm.toLowerCase()}%`);
+    }
+
+    query += " ORDER BY id DESC LIMIT ? OFFSET ?";
+    params.push(limit, offset);
+
+    const rows = db.getAllSync(query, params);
     return rows;
   } catch (error) {
-    console.error('Error al obtener materiales:', error);
+    console.error("Error al obtener materiales:", error);
     throw error;
   }
 };
@@ -51,5 +62,32 @@ export const clearMateriales = () => {
   } catch (error) {
     console.error('Error al limpiar materiales:', error);
     throw error;
+  }
+};
+
+export const deleteMaterial = (id) => {
+  const db = getDatabase();
+  try {
+    const result = db.runSync("DELETE FROM materiales WHERE id = ?;", [id]);
+    return result.changes > 0;
+  } catch (error) {
+    console.error("Error al eliminar material:", error);
+    return false;
+  }
+};
+
+export const updateMaterial = (material) => {
+  const db = getDatabase();
+  const { id, nombre, categoria, imagen } = material;
+
+  try {
+    db.runSync(
+      `UPDATE materiales SET nombre = ?, categoria = ?, imagen = ? WHERE id = ?;`,
+      [nombre, categoria, imagen, id]
+    );
+    return true;
+  } catch (error) {
+    console.error("Error al actualizar material:", error);
+    return false;
   }
 };

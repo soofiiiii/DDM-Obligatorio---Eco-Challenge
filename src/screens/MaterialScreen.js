@@ -2,14 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
-import { insertMaterial } from '../services/materialService';
+import { insertMaterial, updateMaterial } from '../services/materialService';
 import { getCategorias } from '../services/categoriaService';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 export default function MaterialScreen() {
   const [nombre, setNombre] = useState('');
   const [categoria, setCategoria] = useState('');
   const [imagen, setImagen] = useState(null);
   const [categoriasDisponibles, setCategoriasDisponibles] = useState([]);
+
+  const navigation = useNavigation();
+  const route = useRoute();
+  const materialEdit = route.params?.materialEdit ?? null;
 
   useEffect(() => {
     const cargar = async () => {
@@ -18,6 +23,14 @@ export default function MaterialScreen() {
     };
     cargar();
   }, []);
+
+   useEffect(() => {
+    if (materialEdit) {
+      setNombre(materialEdit.nombre);
+      setCategoria(materialEdit.categoria);
+      setImagen(materialEdit.imagen);
+    }
+  }, [materialEdit]);
 
   const elegirImagen = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -52,20 +65,29 @@ export default function MaterialScreen() {
       imagen
     };
 
-    const exito = await insertMaterial(material);
-    if (exito) {
-      Alert.alert('Éxito', 'Material registrado.');
-      setNombre('');
-      setCategoria('');
-      setImagen(null);
+    let exito = false;
+
+     if (materialEdit) {
+      material.id = materialEdit.id;
+      exito = await updateMaterial(material);
     } else {
-      Alert.alert('Error', 'No se pudo guardar.');
+      exito = await insertMaterial(material);
+    }
+
+     if (exito) {
+      Alert.alert(
+        'Éxito',
+        materialEdit ? 'Material actualizado.' : 'Material registrado.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    } else {
+      Alert.alert('Error', 'No se pudo guardar el material.');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Alta de Material Reciclable</Text>
+      <Text style={styles.title}> {materialEdit ? 'Editar Material' : 'Alta de Material Reciclable'}</Text>
 
       <TextInput
         style={styles.input}
@@ -91,7 +113,11 @@ export default function MaterialScreen() {
       {imagen && <Image source={{ uri: imagen }} style={styles.imagen} />}
 
       <View style={{ marginTop: 20 }}>
-        <Button title="Guardar material" onPress={guardarMaterial} />
+         <Button
+          title={materialEdit ? 'Actualizar material' : 'Guardar material'}
+          onPress={guardarMaterial}
+          color={materialEdit ? "#f39c12" : "#28a745"}
+        />
       </View>
     </View>
   );

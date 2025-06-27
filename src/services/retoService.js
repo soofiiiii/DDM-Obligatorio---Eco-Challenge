@@ -31,6 +31,8 @@ export const initRetos = () => {
         foto TEXT,
         fechaInicio TEXT,
         fechaLimite TEXT,
+        direccion TEXT,
+        departamento TEXT,
         FOREIGN KEY (categoriaId) REFERENCES categorias(id)
       );
     `);
@@ -51,24 +53,6 @@ export const initRetos = () => {
     } catch (e) {
       if (!e.message.includes("duplicate column name: fechaLimite")) {
         console.warn("Error al agregar columna fechaLimite:", e.message);
-      }
-    }
-
-    try {
-      dbInstance.execSync("ALTER TABLE retos ADD COLUMN direccion TEXT;");
-      console.log("Columna 'direccion' añadida a la tabla 'retos'.");
-    } catch (e) {
-      if (!e.message.includes("duplicate column name: direccion")) {
-        console.warn("Error al agregar columna direccion:", e.message);
-      }
-    }
-
-    try {
-      dbInstance.execSync("ALTER TABLE retos ADD COLUMN departamento TEXT;");
-      console.log("Columna 'departamento' añadida a la tabla 'retos'.");
-    } catch (e) {
-      if (!e.message.includes("duplicate column name: departamento")) {
-        console.warn("Error al agregar columna departamento:", e.message);
       }
     }
 

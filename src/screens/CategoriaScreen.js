@@ -10,16 +10,27 @@ import {
 } from 'react-native';
 import {
   getCategorias,
-  insertCategoria
+  insertCategoria,
+  updateCategoria
 } from '../services/categoriaService';
+import { useNavigation, useRoute } from '@react-navigation/native';
 
 export default function CategoriaScreen() {
   const [nombre, setNombre] = useState('');
   const [categorias, setCategorias] = useState([]);
+  const navigation = useNavigation();
+  const route = useRoute();
+  const categoriaEdit = route.params?.categoriaEdit ?? null;
 
   useEffect(() => {
     cargarCategorias();
   }, []);
+
+  useEffect(() => {
+    if (categoriaEdit) {
+      setNombre(categoriaEdit.nombre);
+    }
+  }, [categoriaEdit]);
 
   const cargarCategorias = async () => {
     const lista = await getCategorias();
@@ -33,19 +44,40 @@ export default function CategoriaScreen() {
       return;
     }
 
-    const exito = await insertCategoria(nombreFormateado);
+     let exito = false;
+    if (categoriaEdit) {
+      exito = await updateCategoria(categoriaEdit.id, nombreFormateado);
+    } else {
+      exito = await insertCategoria(nombreFormateado);
+    }
+
     if (exito) {
-      Alert.alert('Éxito', 'Categoría agregada.');
-      setNombre('');
-      cargarCategorias();
+      Alert.alert(
+        'Éxito',
+        categoriaEdit ? 'Categoría actualizada.' : 'Categoría agregada.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              if (categoriaEdit) {
+                navigation.goBack();
+              } else {
+                setNombre('');
+                cargarCategorias();
+              }
+            }
+          }
+        ]
+      );
     } else {
       Alert.alert('Ya existe', 'Esa categoría ya está registrada.');
     }
   };
 
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Categorías reciclables</Text>
+      <Text style={styles.title}>{categoriaEdit ? 'Editar Categoría' : 'Alta de Categoría Reciclable'}</Text>
 
       <TextInput
         style={styles.input}
@@ -55,20 +87,10 @@ export default function CategoriaScreen() {
       />
 
       <Button
-        title="Agregar categoría"
+        title={categoriaEdit ? 'Actualizar categoría' : 'Agregar categoría'}
         onPress={guardarCategoria}
         disabled={!nombre.trim()}
-      />
-
-      <Text style={styles.subtitulo}>Categorías registradas:</Text>
-      <FlatList
-        data={categorias}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            <Text>{item.nombre.charAt(0).toUpperCase() + item.nombre.slice(1)}</Text>
-          </View>
-        )}
+        color={categoriaEdit ? '#f39c12' : '#28a745'}
       />
     </View>
   );

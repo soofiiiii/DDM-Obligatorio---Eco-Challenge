@@ -282,7 +282,6 @@ export default function HomeScreen() {
     const retoFechaLimite = new Date(item.fechaLimite);
     const canBeInterested = now <= retoFechaLimite; // Solo se puede interesar si la fecha límite es en el futuro o hoy
 
-    // *** AÑADIR ESTE CONSOLE.LOG PARA DEPURAR ***
     console.log(`Reto: ${item.nombre}, Fecha Límite: ${item.fechaLimite}, Fecha Límite parseada: ${retoFechaLimite}, ¿Puede interesarse?: ${canBeInterested}, Fecha Actual: ${now}`);
 
     return (

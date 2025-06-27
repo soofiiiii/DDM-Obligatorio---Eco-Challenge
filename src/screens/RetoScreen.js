@@ -45,6 +45,7 @@ export default function RetoScreen() {
   const navigation = useNavigation();
   const retoEdit = route.params?.retoEdit || null;
 
+  //Carga las categorías disponibles
   useEffect(() => {
     const cargarCategorias = async () => {
       const lista = await getCategorias();
@@ -53,14 +54,21 @@ export default function RetoScreen() {
     cargarCategorias();
   }, []);
 
+  //Carga los departamentos de Uruguay
   useEffect(() => {
     setDepartamentos(obtenerDepartamentosDeUruguay());
   }, []);
 
+  // Efecto para precargar los datos del reto cuando se está editando
   useEffect(() => {
-    if (retoEdit) {
+    if (retoEdit && departamentos.length > 0) {
+
+      console.log("DEBUG: retoEdit.departamento:", retoEdit.departamento, "(Tipo:", typeof retoEdit.departamento + ")");
+      console.log("DEBUG: retoEdit.direccion:", retoEdit.direccion, "(Tipo:", typeof retoEdit.direccion + ")");
+      
       setNombre(retoEdit.nombre);
       setDescripcion(retoEdit.descripcion);
+      // Aseguramos que categoriaId sea un número entero para el Piker
       setCategoria(retoEdit.categoriaId);
       setFechaInicio(new Date(retoEdit.fechaInicio));
       setFechaLimite(new Date(retoEdit.fechaLimite));
@@ -69,14 +77,26 @@ export default function RetoScreen() {
       setLongitud(retoEdit.longitud);
       setRadio(retoEdit.radio?.toString() || "");
 
-      setDepartamento(retoEdit.departamento || null);
+      // Para el departamento, buscamos el valor que coincide en nuestra lista
+      // Esto maneja si retoEdit.departamento es el 'label' o el 'value' del departamento
+      const departamentToSet = departamentos.find(
+        (dep) => dep.label === retoEdit.departamento || dep.value === retoEdit.departamento
+      )?.value || null; // Obtener el 'value' para el Piker
+      setDepartamento(departamentToSet);
       setDireccion(retoEdit.direccion || "");
-    }
-  }, [retoEdit]);
 
+      //setDepartamento(retoEdit.departamento || null);
+      //setDireccion(retoEdit.direccion || "");
+    }
+  }, [retoEdit, departamentos]); // Añadimos las dependendencias para asegurar que los datos estén cargados al buscar
+  
+  
+  // Efecto para realizar la geocodificación de la dirección
   useEffect(() => {
     const performGeocoding = async () => {
-      if (departamento && direccion.trim()) {
+      // Solo geocodificamos si hay un departamento y una dirección,
+      // Y si la latitud/longitud no están ya establecidad (para evitar re-geocodificar al cargar edición)
+      if (departamento && direccion.trim() && (latitud === null || longitud === null || reto === null)) {
         setIsGeocoding(true);
         const fullAddress = `${direccion}, ${departamento}, Uruguay`;
         console.log("Geocodificando:", fullAddress);
@@ -94,11 +114,13 @@ export default function RetoScreen() {
           setLongitud(null);
         }
         setIsGeocoding(false);
-      } else {
+      } else if (!departamento || !direccion.trim()) {
+        // Limpiamos coordenadas si no hay dirección o departamento completos
         setLatitud(null);
         setLongitud(null);
       }
     };
+    // Pequeño retraso para evitar llamadas excesivas al escribir la dirección
     const handler = setTimeout(() => {
       performGeocoding();
     }, 500);
@@ -106,17 +128,17 @@ export default function RetoScreen() {
     return () => {
       clearTimeout(handler);
     };
-  }, [departamento, direccion]);
+  }, [departamento, direccion, latitud, longitud, retoEdit]);
 
   const guardarReto = async () => {
     if (
       !nombre.trim() ||
       !descripcion.trim() ||
-      !categoria ||
+      categoria === null|| // '=== null' para manejar explícitamente el valor inicial
       !fechaInicio ||
       !fechaLimite ||
-      !puntaje ||
-      !departamento ||
+      !puntaje.trim() || // Aseguramos que el puntaje no sea solo espacios
+      departamento === null ||
       !direccion.trim()
     ) {
       Alert.alert(
@@ -151,11 +173,19 @@ export default function RetoScreen() {
       return;
     }
 
-    if (fechaInicio < hoy) {
+    // Validar fechas solo si el reto es nuevo o si la fecha de inicio es modificada a una anterior
+    // Si el reto ya existe y la fecha de inicio no ha cambiado, no frozar a que sea posterior a hoy
+    if (!retoEdit && fechaInicio < hoy) {
       Alert.alert("Error", "La fecha de inicio no puede ser anterior a hoy.");
       return;
     }
 
+    // Si se edita y la fecha es anterior a hoy, y no es la misma que ya tenía, se alerta.
+    if (retoEdit && fechaInicio < hoy && fechaInicio.toISOString().split("T")[0] !== retoEdit.fechaInicio){
+        Alert.alert("Error", "La fecha de inicio no puede ser anterior a hoy al modificarla.");
+        return;
+    } 
+    
     if (fechaLimite < fechaInicio) {
       Alert.alert(
         "Error",
@@ -173,10 +203,12 @@ export default function RetoScreen() {
     const reto = {
       nombre: nombre.trim(),
       descripcion: descripcion.trim(),
-      categoriaId: parseInt(categoria),
+      categoriaId: parseInt(categoria), // Aseguramos que sea un número
       fechaInicio: fechaInicio.toISOString().split("T")[0],
       fechaLimite: fechaLimite.toISOString().split("T")[0],
       puntaje: puntajeNum,
+      departamento: departamento,
+      direccion: direccion.trim(),
       latitud,
       longitud,
       radio: rad,
@@ -202,7 +234,7 @@ export default function RetoScreen() {
   return (
     <ScrollView style={styles.scrollContainer}>
       <View style={styles.container}>
-        <Text style={styles.title}>Alta de Reto</Text>
+        <Text style={styles.title}>{retoEdit ? "Editar Reto" : "Alta de Reto"}</Text>
 
         <TextInput
           style={styles.input}
@@ -283,12 +315,12 @@ export default function RetoScreen() {
         />
 
         <Text style={styles.sectionTitle}>
-          Ubicación del Reto (Opcional si no se especifica Radio)
+          Ubicación del Reto
         </Text>
 
         <Text style={styles.label}>Departamento:</Text>
         <View style={styles.pickerContainer}>
-          <Picker selectedValue={departamento} onValueChange={setDepartamento}>
+          <Picker selectedValue={departamento} onValueChange={(itemValue) => setDepartamento(itemValue)}>
             {departamentos.map((item, index) => (
               <Picker.Item key={index} label={item.label} value={item.value} />
             ))}
@@ -310,6 +342,8 @@ export default function RetoScreen() {
             style={{ marginBottom: 10 }}
           />
         )}
+        
+        
 
         <TextInput
           style={styles.input}

@@ -20,7 +20,7 @@ import {
   resetCategorias,
 } from "../services/categoriaService";
 import { initRetos, preloadRetos, resetRetos } from "../services/retoService";
-
+import { initMateriales } from "../services/materialService";
 import { MARCOS_DISPONIBLES } from "../utils/marcos";
 
 export const AuthContext = createContext();
@@ -39,14 +39,6 @@ async function requestNotificationPermissions() {
     );
     return false;
   }
-  /*if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'EcoChallenge Notifications',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF231F7C',
-    });
-  }*/
   console.log("Permisos de notificaciones concedidos.");
   return true;
 }
@@ -142,6 +134,7 @@ export const AuthProvider = ({ children }) => {
           "Electrónicos",
           "Orgánico",
         ]); // Precarga categorías
+        initMateriales();
         initRetos();
         preloadRetos(); // Precarga retos (después de categorías)
         initMarcos(); // Marcos (independientes para su tabla, pero podrían depender de usuarios para datos)
