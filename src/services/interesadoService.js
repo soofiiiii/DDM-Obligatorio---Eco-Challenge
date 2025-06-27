@@ -1,4 +1,4 @@
-import { getDatabase } from './userService';
+import { getDatabase } from "../database/db";
 import * as Notifications from 'expo-notifications';
 
 // Inicializa la tabla 'interesados' si no existe.

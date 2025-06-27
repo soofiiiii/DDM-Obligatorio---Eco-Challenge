@@ -1,16 +1,6 @@
-import * as SQLite from 'expo-sqlite';
 import { calcularDistanciaEnMetros } from '../utils/gps';
 import { getRetos } from './retoService';
-
-let dbInstanceParticipacion = null;
-
-export function getDatabase() {
-  if (!dbInstanceParticipacion) {
-    dbInstanceParticipacion = SQLite.openDatabaseSync('ecochallenge.db');
-    console.log('Database opened synchronously for participacionService: ecochallenge.db');
-  }
-  return dbInstanceParticipacion;
-}
+import { getDatabase } from "../database/db";
 
 export const initParticipaciones = () => {
   const dbInstance = getDatabase();

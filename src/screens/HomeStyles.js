@@ -1,4 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 export const COLORS = {
   primaryGreen: '#4CAF50',
@@ -6,7 +8,7 @@ export const COLORS = {
   darkGreen: '#2E7D32',
   accentBlue: '#00BCD4',
   lightGray: '#F5F5F5',
-  mediumGray: '#BDBDBD',
+  mediumGray: '#BDBDBD', // Este color se usa para los botones deshabilitados
   darkText: '#212121',
   white: '#FFFFFF',
   gold: '#FFEB3B',
@@ -301,6 +303,11 @@ const styles = StyleSheet.create({
   retoButtonInteresado: {
     backgroundColor: COLORS.mediumGray,
   },
+  // ESTILO PARA EL BOTÓN "ME INTERESA" CUANDO ESTÁ DESHABILITADO
+  retoButtonMeInteresaDisabled: {
+    backgroundColor: COLORS.mediumGray, // Un gris que indica inactividad
+    opacity: 0.7, // Un poco de transparencia para reforzar el estado deshabilitado
+  },
   retoButtonParticipar: {
     backgroundColor: COLORS.accentBlue,
     paddingVertical: 10,
@@ -314,8 +321,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     marginBottom: 5,
   },
-  retoButtonParticiparDisabled: { 
-    backgroundColor: COLORS.mediumGray, 
+  retoButtonParticiparDisabled: {
+    backgroundColor: COLORS.mediumGray,
     opacity: 0.7
   },
   retoButtonText: {

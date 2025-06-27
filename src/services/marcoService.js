@@ -1,16 +1,5 @@
-import * as SQLite from 'expo-sqlite'; 
+import { getDatabase } from "../database/db";
 import { MARCOS_DISPONIBLES } from '../utils/marcos';
-
-
-let dbInstanceMarco = null;
-
-export function getDatabase() {
-  if (!dbInstanceMarco) {
-    dbInstanceMarco = SQLite.openDatabaseSync('ecochallenge.db');
-    console.log('Database opened synchronously for marcoService: ecochallenge.db');
-  }
-  return dbInstanceMarco;
-}
 
 // Inicializa la tabla de marcos
 export const initMarcos = () => { 

@@ -1,6 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
 
-// Colores de la aplicación 
+// Colores de la aplicación
 const COLORS = {
   primaryGreen: '#4CAF50',
   lightGreen: '#8BC34A',
@@ -11,7 +11,9 @@ const COLORS = {
   darkText: '#212121',
   white: '#FFFFFF',
   gold: '#FFEB3B',
-  darkOverlay: 'rgba(0,0,0,0.6)'
+  darkOverlay: 'rgba(0,0,0,0.6)',
+  // Asegúrate de que este color esté definido si no lo tienes:
+  red: '#F44336', // Usado para el botón "Cancelar" en el modal de imagen
 };
 
 const styles = StyleSheet.create({
@@ -139,7 +141,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
   },
-    datePickerButton: {
+  datePickerButton: {
     backgroundColor: COLORS.white,
     borderColor: COLORS.mediumGray,
     borderWidth: 1,
@@ -158,6 +160,68 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
+  // === NUEVOS ESTILOS PARA EL MODAL DE SELECCIÓN DE IMAGEN ===
+  imageSourceOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end', // Alinea el contenido en la parte inferior
+    backgroundColor: COLORS.darkOverlay, // Fondo semi-transparente oscuro
+  },
+  imageSourceContent: {
+    backgroundColor: COLORS.white, // Fondo blanco para el contenido del modal
+    padding: 25,
+    borderTopLeftRadius: 25, // Bordes redondeados en la parte superior
+    borderTopRightRadius: 25,
+    alignItems: 'center',
+    // Sombras para darle un efecto elevado
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -5 }, // Sombra hacia arriba
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  imageSourceTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 25,
+    color: COLORS.darkText,
+  },
+  imageSourceOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%', // Ocupa todo el ancho disponible
+    paddingVertical: 18,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.lightGray, // Separador sutil
+  },
+  imageSourceIcon: {
+    marginRight: 20,
+    color: COLORS.darkText,
+  },
+  imageSourceOptionText: {
+    fontSize: 18,
+    color: COLORS.darkText,
+  },
+  // Estilo para el botón de cancelar dentro del modal
+  cancelButton: {
+    marginTop: 25,
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 12,
+    backgroundColor: COLORS.red, // Rojo para cancelar, o algún color de "error" de tu tema
+    alignItems: 'center',
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  cancelButtonText: {
+    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });
 
 export default styles;

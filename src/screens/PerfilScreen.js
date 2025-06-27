@@ -25,12 +25,12 @@ import { ThemeContext } from "../context/ThemeContext";
 import * as ImagePicker from "expo-image-picker";
 import { establecerMarcoSeleccionado } from "../services/marcoService";
 import { MARCOS_DISPONIBLES } from "../utils/marcos";
+import { getDatabase } from "../database/db";
 
 import {
   getParticipacionesPendientesPorUsuario,
   updateParticipacion,
   deleteParticipacion,
-  getDatabase,
 } from "../services/participacionService";
 
 import Icon from "react-native-vector-icons/FontAwesome";

@@ -1,5 +1,4 @@
-import * as SQLite from "expo-sqlite";
-import { getDatabase } from "./userService"; 
+import { getDatabase } from "../database/db";
 
 // Función auxiliar para verificar si un reto está activo
 export const isRetoActivo = (reto) => {
@@ -15,7 +14,6 @@ export const isRetoActivo = (reto) => {
   // Y la fecha actual es igual o anterior a la fecha límite.
   return currentDate >= startDate && currentDate <= endDate;
 };
-
 
 export const initRetos = () => {
   const dbInstance = getDatabase();
@@ -56,6 +54,24 @@ export const initRetos = () => {
       }
     }
 
+    try {
+      dbInstance.execSync("ALTER TABLE retos ADD COLUMN direccion TEXT;");
+      console.log("Columna 'direccion' añadida a la tabla 'retos'.");
+    } catch (e) {
+      if (!e.message.includes("duplicate column name: direccion")) {
+        console.warn("Error al agregar columna direccion:", e.message);
+      }
+    }
+
+    try {
+      dbInstance.execSync("ALTER TABLE retos ADD COLUMN departamento TEXT;");
+      console.log("Columna 'departamento' añadida a la tabla 'retos'.");
+    } catch (e) {
+      if (!e.message.includes("duplicate column name: departamento")) {
+        console.warn("Error al agregar columna departamento:", e.message);
+      }
+    }
+
     console.log("Tabla de retos inicializada o ya existente.");
   } catch (error) {
     console.error("Error al inicializar la tabla de retos:", error);
@@ -85,6 +101,8 @@ export const insertReto = (reto) => {
     latitud,
     longitud,
     radio,
+    direccion,
+    departamento,
     foto,
     fechaInicio,
     fechaLimite,
@@ -98,8 +116,9 @@ export const insertReto = (reto) => {
 
     const result = dbInstance.runSync(
       `INSERT INTO retos (
-          nombre, descripcion, categoriaId, puntaje, latitud, longitud, radio, foto, fechaInicio, fechaLimite
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    nombre, descripcion, categoriaId, puntaje, latitud, longitud, radio,
+    direccion, departamento, foto, fechaInicio, fechaLimite
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
       [
         nombre,
         descripcion,
@@ -108,6 +127,8 @@ export const insertReto = (reto) => {
         latitud,
         longitud,
         radio,
+        direccion,
+        departamento,
         foto,
         fechaInicio,
         fechaLimite,
@@ -120,7 +141,6 @@ export const insertReto = (reto) => {
     throw error;
   }
 };
-
 
 export const getRetos = (
   limit,
@@ -171,7 +191,6 @@ export const getRetos = (
     }
   }
 
-  
   if (orderByClauses.length === 0) {
     orderByClauses.push(`r.id DESC`); // Orden por defecto: los retos más nuevos primero
   }
@@ -190,7 +209,6 @@ export const getRetos = (
     return [];
   }
 };
-
 
 export const getRetosCount = (
   searchTerm = "",
@@ -475,6 +493,87 @@ export const preloadRetos = () => {
     console.log("DEBUG PRELOAD RETOS FIN");
   } catch (error) {
     console.error("Error al precargar retos:", error);
+    throw error;
+  }
+};
+
+export const getRetoPorId = (id) => {
+  const dbInstance = getDatabase();
+  try {
+    const row = dbInstance.getFirstSync(
+      `SELECT r.*, c.nombre AS categoriaNombre
+       FROM retos r
+       LEFT JOIN categorias c ON r.categoriaId = c.id
+       WHERE r.id = ?;`,
+      [id]
+    );
+    return row;
+  } catch (error) {
+    console.error("Error al obtener el reto por ID:", error);
+    return null;
+  }
+};
+
+export const updateReto = (id, retoActualizado) => {
+  const dbInstance = getDatabase();
+  const {
+    nombre,
+    descripcion,
+    categoriaId,
+    puntaje,
+    latitud,
+    longitud,
+    radio,
+    direccion,
+    departamento,
+    foto,
+    fechaInicio,
+    fechaLimite,
+  } = retoActualizado;
+
+  try {
+    const parsedCategoriaId =
+      typeof categoriaId === "number" && !isNaN(categoriaId)
+        ? categoriaId
+        : null;
+
+    const result = dbInstance.runSync(
+      `UPDATE retos
+   SET nombre = ?, descripcion = ?, categoriaId = ?, puntaje = ?, latitud = ?,
+       longitud = ?, radio = ?, direccion = ?, departamento = ?, foto = ?,
+       fechaInicio = ?, fechaLimite = ?
+   WHERE id = ?;`,
+      [
+        nombre,
+        descripcion,
+        parsedCategoriaId,
+        puntaje,
+        latitud,
+        longitud,
+        radio,
+        direccion,
+        departamento,
+        foto,
+        fechaInicio,
+        fechaLimite,
+        id,
+      ]
+    );
+
+    return result.changes > 0;
+  } catch (error) {
+    console.error("Error al actualizar reto:", error);
+    throw error;
+  }
+};
+
+export const deleteReto = (id) => {
+  const dbInstance = getDatabase();
+  try {
+    const result = dbInstance.runSync(`DELETE FROM retos WHERE id = ?;`, [id]);
+    return result.changes > 0;
+  } catch (error) {
+    console.error("Error al eliminar reto:", error);
     throw error;
   }
 };

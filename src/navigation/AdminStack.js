@@ -1,12 +1,13 @@
-import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
+import React from "react";
+import { createStackNavigator } from "@react-navigation/stack";
 
-import AdminPanelScreen from '../screens/AdminPanelScreen';
-import RetoScreen from '../screens/RetoScreen';
-import MaterialScreen from '../screens/MaterialScreen';
-import CategoriaScreen from '../screens/CategoriaScreen';
-import RevisionesScreen from '../screens/RevisionesScreen';
-import RevisarRetoScreen from '../screens/RevisarRetoScreen';
+import AdminPanelScreen from "../screens/AdminPanelScreen";
+import RetoScreen from "../screens/RetoScreen";
+import MaterialScreen from "../screens/MaterialScreen";
+import CategoriaScreen from "../screens/CategoriaScreen";
+import RevisionesScreen from "../screens/RevisionesScreen";
+import RevisarRetoScreen from "../screens/RevisarRetoScreen";
+import ListaRetosAdminScreen from "../screens/ListaRetosAdminScreen";
 
 const Stack = createStackNavigator();
 
@@ -16,32 +17,37 @@ export default function AdminStack() {
       <Stack.Screen
         name="PanelAdmin"
         component={AdminPanelScreen}
-        options={{ title: 'Panel de Administración' }}
+        options={{ title: "Panel de Administración" }}
       />
       <Stack.Screen
         name="ABMRetos"
+        component={ListaRetosAdminScreen}
+        options={{ title: "Gestión de Retos" }}
+      />
+      <Stack.Screen
+        name="RetoScreen"
         component={RetoScreen}
-        options={{ title: 'Retos' }}
+        options={{ title: "Formulario de Reto" }}
       />
       <Stack.Screen
         name="ABMMateriales"
         component={MaterialScreen}
-        options={{ title: 'Materiales' }}
+        options={{ title: "Materiales" }}
       />
       <Stack.Screen
         name="ABMCategorias"
         component={CategoriaScreen}
-        options={{ title: 'Categorías' }}
+        options={{ title: "Categorías" }}
       />
       <Stack.Screen
         name="Revisiones"
         component={RevisionesScreen}
-        options={{ title: 'Revisar Participaciones' }}
+        options={{ title: "Revisar Participaciones" }}
       />
       <Stack.Screen
         name="RevisarReto"
         component={RevisarRetoScreen}
-        options={{ title: 'Participaciones del Reto' }}
+        options={{ title: "Participaciones del Reto" }}
       />
     </Stack.Navigator>
   );

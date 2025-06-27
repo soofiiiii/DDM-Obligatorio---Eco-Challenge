@@ -10,10 +10,11 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { getCategorias } from "../services/categoriaService";
-import { insertReto } from "../services/retoService";
+import { insertReto, updateReto } from "../services/retoService";
 
 import { geocodeAddress } from "../services/geocodingService";
 
@@ -40,6 +41,10 @@ export default function RetoScreen() {
   const [longitud, setLongitud] = useState(null);
   const [radio, setRadio] = useState("");
 
+  const route = useRoute();
+  const navigation = useNavigation();
+  const retoEdit = route.params?.retoEdit || null;
+
   useEffect(() => {
     const cargarCategorias = async () => {
       const lista = await getCategorias();
@@ -51,6 +56,23 @@ export default function RetoScreen() {
   useEffect(() => {
     setDepartamentos(obtenerDepartamentosDeUruguay());
   }, []);
+
+  useEffect(() => {
+    if (retoEdit) {
+      setNombre(retoEdit.nombre);
+      setDescripcion(retoEdit.descripcion);
+      setCategoria(retoEdit.categoriaId);
+      setFechaInicio(new Date(retoEdit.fechaInicio));
+      setFechaLimite(new Date(retoEdit.fechaLimite));
+      setPuntaje(retoEdit.puntaje.toString());
+      setLatitud(retoEdit.latitud);
+      setLongitud(retoEdit.longitud);
+      setRadio(retoEdit.radio?.toString() || "");
+
+      setDepartamento(retoEdit.departamento || null);
+      setDireccion(retoEdit.direccion || "");
+    }
+  }, [retoEdit]);
 
   useEffect(() => {
     const performGeocoding = async () => {
@@ -151,30 +173,27 @@ export default function RetoScreen() {
     const reto = {
       nombre: nombre.trim(),
       descripcion: descripcion.trim(),
-      categoriaId: parseInt(categoria), // Usar categoriaId para coincidir con la DB
-      fechaInicio: fechaInicio.toISOString().split("T")[0], // Formato YYYY-MM-DD
-      fechaLimite: fechaLimite.toISOString().split("T")[0], // Formato YYYY-MM-DD
+      categoriaId: parseInt(categoria),
+      fechaInicio: fechaInicio.toISOString().split("T")[0],
+      fechaLimite: fechaLimite.toISOString().split("T")[0],
       puntaje: puntajeNum,
-      latitud: latitud, // Ya son números desde el geocodingService
-      longitud: longitud,
+      latitud,
+      longitud,
       radio: rad,
-      foto: "https://placehold.co/150x150/CCCCCC/000000?text=Reto", // Foto por defecto
+      foto: "https://placehold.co/150x150/CCCCCC/000000?text=Reto",
     };
 
-    const exito = await insertReto(reto);
+    let exito = false;
+
+    if (retoEdit) {
+      exito = await updateReto(retoEdit.id, reto);
+    } else {
+      exito = await insertReto(reto);
+    }
+
     if (exito) {
-      Alert.alert("Éxito", "Reto creado.");
-      setNombre("");
-      setDescripcion("");
-      setCategoria(null);
-      setFechaInicio(null);
-      setFechaLimite(null);
-      setPuntaje("");
-      setDepartamento(null);
-      setDireccion("");
-      setLatitud(null);
-      setLongitud(null);
-      setRadio("");
+      Alert.alert("Éxito", retoEdit ? "Reto actualizado." : "Reto creado.");
+      navigation.goBack();
     } else {
       Alert.alert("Error", "No se pudo guardar el reto.");
     }
@@ -301,7 +320,11 @@ export default function RetoScreen() {
         />
 
         <View style={{ marginTop: 20, marginBottom: 50 }}>
-          <Button title="Crear reto" onPress={guardarReto} color="#28a745" />
+          <Button
+            title={retoEdit ? "Actualizar reto" : "Crear reto"}
+            onPress={guardarReto}
+            color={retoEdit ? "#f39c12" : "#28a745"} // Amarillo para editar, verde para crear
+          />
         </View>
       </View>
     </ScrollView>

@@ -8,9 +8,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { loginUsuario, 
- 
-} from "../services/userService";
+import { loginUsuario } from "../services/userService";
 import { AuthContext } from "../context/AuthContext";
 import Icon from "react-native-vector-icons/FontAwesome";
 

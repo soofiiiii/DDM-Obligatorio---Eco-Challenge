@@ -23,13 +23,12 @@ import * as Notifications from 'expo-notifications';
 import styles, { COLORS } from './HomeStyles';
 
 // Importar servicios de retos y categorías
-// Importar isRetoActivo desde retoService
-import { getRetos, getRetosCount, initRetos, preloadRetos, isRetoActivo } from '../services/retoService';
-import { getCategorias, initCategorias, preloadCategorias } from '../services/categoriaService';
+import { getRetos, getRetosCount, isRetoActivo } from '../services/retoService';
+import { getCategorias } from '../services/categoriaService';
 // Importar el servicio de interesados
 import { initInteresados, marcarComoInteresado, estaMarcado } from '../services/interesadoService';
 
-// Datos de Misiones Especiales de ejemplo 
+// Datos de Misiones Especiales de ejemplo
 const MISIONES_ESPECIALES = [
   { id: 'm1', nombre: 'Limpieza de Parque Vecinal', descripcion: 'Organiza o participa en una limpieza de tu parque local.', icono: 'tree' },
   { id: 'm2', nombre: 'Reciclaje Creativo', descripcion: 'Crea una pieza de arte u objeto útil con materiales reciclados.', icono: 'lightbulb-o' },
@@ -54,7 +53,7 @@ export default function HomeScreen() {
   const [loadingRetos, setLoadingRetos] = useState(false);
 
   const [interesadosIds, setInteresadosIds] = useState(new Set());
-  const currentUserEmail = "usuario_demo@ecochallenge.com";
+  const currentUserEmail = "usuario_demo@ecochallenge.com"; // Considera obtener esto de un contexto de autenticación
 
   // ESTADOS PARA LOS FILTROS ADICIONALES
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -202,6 +201,15 @@ export default function HomeScreen() {
   }, [fadeAnim, scaleAnim]);
 
   const handleMeInteresa = async (reto) => {
+    // Verificar si el reto ya finalizó antes de intentar marcar como interesado
+    const now = new Date();
+    const fechaLimite = new Date(reto.fechaLimite);
+
+    if (now > fechaLimite) {
+      Alert.alert("Reto Finalizado", "No puedes interesarte en retos que ya han terminado.");
+      return;
+    }
+
     const hasPermission = await requestNotificationPermissions();
     if (!hasPermission) {
       return;
@@ -222,7 +230,7 @@ export default function HomeScreen() {
   };
 
   const handleParticiparReto = (reto) => {
-    // Reutilizar la función isRetoActivo para validar 
+    // Reutilizar la función isRetoActivo para validar
     if (!isRetoActivo(reto)) {
       const currentDate = new Date();
       const startDate = new Date(reto.fechaInicio);
@@ -269,6 +277,14 @@ export default function HomeScreen() {
     // Determinar si el reto está activo para participar
     const canParticipate = isRetoActivo(item);
 
+    // Determinar si el reto está disponible para interesarse (fecha limite no ha pasado)
+    const now = new Date();
+    const retoFechaLimite = new Date(item.fechaLimite);
+    const canBeInterested = now <= retoFechaLimite; // Solo se puede interesar si la fecha límite es en el futuro o hoy
+
+    // *** AÑADIR ESTE CONSOLE.LOG PARA DEPURAR ***
+    console.log(`Reto: ${item.nombre}, Fecha Límite: ${item.fechaLimite}, Fecha Límite parseada: ${retoFechaLimite}, ¿Puede interesarse?: ${canBeInterested}, Fecha Actual: ${now}`);
+
     return (
       <View style={styles.retoCard}>
         <Image source={{ uri: item.foto }} style={styles.retoImage} />
@@ -285,9 +301,13 @@ export default function HomeScreen() {
           <View style={styles.retoFooter}>
             <Text style={styles.retoPuntaje}>Puntos: {item.puntaje}</Text>
             <TouchableOpacity
-              style={[styles.retoButton, isInteresado && styles.retoButtonInteresado]}
+              style={[
+                styles.retoButton,
+                isInteresado && styles.retoButtonInteresado,
+                !canBeInterested && styles.retoButtonMeInteresaDisabled // Aplica el estilo de deshabilitado
+              ]}
               onPress={() => handleMeInteresa(item)}
-              disabled={isInteresado}
+              disabled={isInteresado || !canBeInterested} // Deshabilita si ya está interesado O si el reto finalizó
             >
               <Text style={styles.retoButtonText}>
                 {isInteresado ? 'Interesado' : 'Me Interesa'}

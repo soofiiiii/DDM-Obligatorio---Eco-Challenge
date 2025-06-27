@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   Alert,
   TouchableOpacity,
   Image,
+  Modal,
+  Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -33,14 +35,95 @@ export default function RegisterScreen() {
   const [passwordErrors, setPasswordErrors] = useState([]);
   const { iniciarSesion } = useContext(AuthContext);
 
-  const elegirFoto = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      base64: false,
-    });
-    if (!result.canceled) {
-      setFoto(result.assets[0].uri);
+  const [showImageSourceModal, setShowImageSourceModal] = useState(false);
+
+  // Efecto para solicitar permisos de la cámara y galería al cargar la pantalla
+  useEffect(() => {
+    (async () => {
+      if (Platform.OS !== "web") {
+        console.log("Solicitando permisos de cámara y galería al iniciar la pantalla.");
+        const { status: cameraStatus } =
+          await ImagePicker.requestCameraPermissionsAsync();
+        const { status: galleryStatus } =
+          await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        console.log("Estado de permiso de cámara (al iniciar):", cameraStatus);
+        console.log("Estado de permiso de galería (al iniciar):", galleryStatus);
+
+        if (cameraStatus !== "granted") {
+          Alert.alert(
+            "Permiso de Cámara",
+            "Necesitamos acceso a tu cámara para tomar fotos. Por favor, otórguelo en la configuración de la aplicación."
+          );
+        }
+        if (galleryStatus !== "granted") {
+          Alert.alert(
+            "Permiso de Galería",
+            "Necesitamos acceso a tu galería para elegir fotos. Por favor, otórguelo en la configuración de la aplicación."
+          );
+        }
+      }
+    })();
+  }, []);
+
+  const handleChoosePhoto = () => {
+    setShowImageSourceModal(true);
+  };
+
+  const pickImageFromGallery = async () => {
+    setShowImageSourceModal(false);
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        base64: false,
+        quality: 0.8,
+      });
+      if (!result.canceled) {
+        setFoto(result.assets[0].uri);
+      } else {
+        console.log("Selección de galería cancelada.");
+      }
+    } catch (error) {
+      console.error("Error al seleccionar imagen de la galería:", error);
+      Alert.alert("Error", "No se pudo seleccionar la imagen de la galería.");
+    }
+  };
+
+  const takePhotoFromCamera = async () => {
+    setShowImageSourceModal(false);
+
+    console.log("Intentando abrir la cámara...");
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    console.log("Estado de permiso de cámara (al intentar tomar foto):", status);
+
+    if (status !== "granted") {
+      Alert.alert(
+        "Permiso de Cámara",
+        "Necesitamos acceso a tu cámara para tomar fotos. Por favor, otórguelo en la configuración de la aplicación."
+      );
+      return;
+    }
+
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        base64: false,
+        quality: 0.8,
+      });
+      if (!result.canceled) {
+        setFoto(result.assets[0].uri);
+        console.log("Foto tomada exitosamente:", result.assets[0].uri);
+      } else {
+        console.log("Toma de foto cancelada.");
+      }
+    } catch (error) {
+      console.error("Error al lanzar la cámara:", error);
+      Alert.alert("Error", "No se pudo abrir la cámara.");
     }
   };
 
@@ -251,7 +334,7 @@ export default function RegisterScreen() {
         placeholderTextColor={styles.input.borderColor}
       />
 
-      <TouchableOpacity style={styles.photoPickerButton} onPress={elegirFoto}>
+      <TouchableOpacity style={styles.photoPickerButton} onPress={handleChoosePhoto}>
         <Text style={styles.photoPickerButtonText}>Elegir foto de perfil</Text>
       </TouchableOpacity>
 
@@ -262,6 +345,61 @@ export default function RegisterScreen() {
           <Text style={styles.registerButtonText}>Registrarse</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Modal de selección de origen de imagen */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showImageSourceModal}
+        onRequestClose={() => setShowImageSourceModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.imageSourceOverlay}
+          activeOpacity={1}
+          onPressOut={() => setShowImageSourceModal(false)}
+        >
+          <View
+            style={styles.imageSourceContent}
+            onStartShouldSetResponder={() => true}
+          >
+            <Text style={styles.imageSourceTitle}>
+              Seleccionar fuente de imagen
+            </Text>
+            <TouchableOpacity
+              style={styles.imageSourceOption}
+              onPress={takePhotoFromCamera} // Aquí se llama a la función para tomar foto
+            >
+              <Icon
+                name="camera"
+                size={24}
+                color="#333"
+                style={styles.imageSourceIcon}
+              />
+              <Text style={styles.imageSourceOptionText}>Tomar foto</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.imageSourceOption}
+              onPress={pickImageFromGallery} // Aquí se llama a la función para elegir de galería
+            >
+              <Icon
+                name="image"
+                size={24}
+                color="#333"
+                style={styles.imageSourceIcon}
+              />
+              <Text style={styles.imageSourceOptionText}>
+                Elegir de la galería
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setShowImageSourceModal(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }

@@ -1,13 +1,4 @@
-import * as SQLite from 'expo-sqlite';
-
-let db;
-
-export function getDatabase() {
-  if (!db) {
-    db = SQLite.openDatabaseSync('ecochallenge.db');
-  }
-  return db;
-}
+import { getDatabase } from "../database/db";
 
 export const initMateriales = () => {
   const db = getDatabase();

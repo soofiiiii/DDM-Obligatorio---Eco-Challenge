@@ -1,19 +1,4 @@
-import * as SQLite from "expo-sqlite";
-
-let db = null; 
-
-export function getDatabase() {
-  if (!db) {
-    try {
-      db = SQLite.openDatabaseSync("ecochallenge.db");
-      console.log("Database opened synchronously: ecochallenge.db");
-    } catch (error) {
-      console.error("Error al abrir la base de datos:", error);
-      throw error;
-    }
-  }
-  return db;
-}
+import { getDatabase } from "../database/db";
 
 export const initDB = () => {
   const dbInstance = getDatabase(); // Obtener la instancia de DB
@@ -66,6 +51,7 @@ export const initDB = () => {
     }
 
     console.log("Tablas de usuarios y sesión inicializadas o ya existentes.");
+    console.log(dbInstance);
   } catch (error) {
     console.error("Error al inicializar la base de datos (initDB):", error);
     throw error;

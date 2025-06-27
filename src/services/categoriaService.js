@@ -1,5 +1,4 @@
-import * as SQLite from 'expo-sqlite';
-import { getDatabase } from './userService';
+import { getDatabase } from "../database/db";
 
 // Inicializa la tabla de categorías si no existe
 export const initCategorias = () => {

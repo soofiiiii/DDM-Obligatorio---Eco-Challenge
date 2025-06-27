@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useCallback } from "react";
 import { Alert, View, Text, Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 
+import { getDatabase } from "../database/db";
 import * as userService from "../services/userService";
 import {
   getCantidadRetosAprobadosPorUsuario,
@@ -70,7 +71,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const db = userService.getDatabase();
+      const db = getDatabase();
       const updatedUserFromDB = db.getFirstSync(
         "SELECT * FROM usuarios WHERE email = ?;",
         [usuario.email]
@@ -155,7 +156,8 @@ export const AuthProvider = ({ children }) => {
         try {
           const targetEmail = "lauta@gmail.com";
           const pointsToAdd = 500;
-          const dbInstance = userService.getDatabase();
+          const dbInstance = getDatabase();
+          console.log(dbInstance);
           const userRecord = dbInstance.getFirstSync(
             "SELECT puntos FROM usuarios WHERE email = ? LIMIT 1;",
             [targetEmail]
