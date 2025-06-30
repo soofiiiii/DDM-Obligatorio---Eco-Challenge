@@ -16,12 +16,16 @@ import {
 } from "../services/marcoService";
 import {
   initCategorias,
-  preloadCategorias,
+ 
   resetCategorias,
 } from "../services/categoriaService";
-import { initRetos, preloadRetos, resetRetos } from "../services/retoService";
+import { initRetos, resetRetos } from "../services/retoService";
 import { initMateriales } from "../services/materialService";
 import { MARCOS_DISPONIBLES } from "../utils/marcos";
+
+import { insertarDatosPrueba } from "../services/datosPruebaService";
+
+import { initNotificaciones } from "../services/notificacionService";
 
 export const AuthContext = createContext();
 
@@ -39,7 +43,6 @@ async function requestNotificationPermissions() {
     );
     return false;
   }
-  console.log("Permisos de notificaciones concedidos.");
   return true;
 }
 
@@ -52,7 +55,6 @@ export const AuthProvider = ({ children }) => {
   const [marcoSeleccionadoGlobal, setMarcoSeleccionadoGlobal] = useState(null);
 
   const recargarDatosPerfil = useCallback(async () => {
-    console.log("Recargando datos de perfil...");
 
     if (!usuario?.email) {
       setRetosCompletadosGlobal(0);
@@ -102,7 +104,6 @@ export const AuthProvider = ({ children }) => {
         setMarcoSeleccionadoGlobal(null);
       }
 
-      console.log("Datos de perfil recargados con éxito.");
     } catch (error) {
       console.error(
         "Error al recargar datos del perfil en AuthContext:",
@@ -113,8 +114,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const initializeAndLoadSession = async () => {
-      console.log("Iniciando carga de sesión y bases de datos...");
-      try {
+     try {
         Notifications.setNotificationHandler({
           handleNotification: async () => ({
             shouldShowBanner: true,
@@ -123,77 +123,22 @@ export const AuthProvider = ({ children }) => {
             shouldSetBadge: false,
           }),
         });
-        console.log("Manejador de notificaciones establecido.");
-
         userService.initDB(); // Usuarios y Sesión (independientes)
         initCategorias();
-        preloadCategorias([
-          "Plástico",
-          "Papel",
-          "Vidrio",
-          "Electrónicos",
-          "Orgánico",
-        ]); // Precarga categorías
         initMateriales();
         initRetos();
-        preloadRetos(); // Precarga retos (después de categorías)
         initMarcos(); // Marcos (independientes para su tabla, pero podrían depender de usuarios para datos)
         initParticipaciones(); // Participaciones (depende de retos y usuarios)
-        console.log(
-          "Todas las bases de datos inicializadas y precargadas correctamente."
-        );
+        initNotificaciones();
+       
 
         await requestNotificationPermissions();
 
-        // Bloque temporal para añadir puntos (prueba)
-        try {
-          const targetEmail = "lauta@gmail.com";
-          const pointsToAdd = 500;
-          const dbInstance = getDatabase();
-          console.log(dbInstance);
-          const userRecord = dbInstance.getFirstSync(
-            "SELECT puntos FROM usuarios WHERE email = ? LIMIT 1;",
-            [targetEmail]
-          );
-          let currentPoints = 0;
-          if (
-            userRecord &&
-            userRecord.puntos !== undefined &&
-            userRecord.puntos !== null
-          ) {
-            currentPoints = userRecord.puntos;
-          }
-          if (currentPoints < pointsToAdd) {
-            const newTotalPoints = currentPoints + pointsToAdd;
-            const updated = await userService.updateUserPuntos(
-              targetEmail,
-              newTotalPoints
-            );
-            if (updated) {
-              console.log(
-                `¡Éxito! ${pointsToAdd} puntos añadidos a ${targetEmail}. Total: ${newTotalPoints}`
-              );
-            } else {
-              console.warn(
-                `Fallo al añadir puntos a ${targetEmail}. Puede que el usuario no exista o no se pudo actualizar.`
-              );
-            }
-          } else {
-            console.log(
-              `Usuario ${targetEmail} ya tiene ${currentPoints} puntos, no se añaden más.`
-            );
-          }
-        } catch (pointsError) {
-          console.error(
-            "Error al intentar añadir puntos de prueba en AuthContext:",
-            pointsError
-          );
-        }
+       await insertarDatosPrueba();
 
         const sesion = await userService.obtenerSesion();
         if (sesion) {
           setUsuario(sesion);
-          console.log("Sesión cargada:", sesion.email);
         } else {
           console.log("No hay sesión guardada.");
         }
@@ -208,7 +153,6 @@ export const AuthProvider = ({ children }) => {
         );
       } finally {
         setCargando(false);
-        console.log("Fin del useEffect de carga inicial.");
       }
     };
 
@@ -225,8 +169,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await userService.guardarSesion(usuarioData);
       setUsuario(usuarioData);
-      console.log("Sesión iniciada y guardada correctamente.");
-    } catch (error) {
+      } catch (error) {
       console.error("Error al iniciar sesión:", error);
       Alert.alert(
         "Error al Iniciar Sesión",
@@ -239,8 +182,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await userService.cerrarSesion();
       setUsuario(null);
-      console.log("Sesión cerrada correctamente.");
-    } catch (error) {
+      } catch (error) {
       console.error("Error al cerrar sesión:", error);
       Alert.alert(
         "Error al Cerrar Sesión",

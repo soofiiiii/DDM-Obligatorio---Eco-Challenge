@@ -1,5 +1,6 @@
 import { getDatabase } from "../database/db";
-import * as Notifications from 'expo-notifications';
+import * as Notifications from "expo-notifications";
+import { insertarNotificacion } from "./notificacionService";
 
 // Inicializa la tabla 'interesados' si no existe.
 export const initInteresados = () => {
@@ -13,9 +14,8 @@ export const initInteresados = () => {
         UNIQUE(emailUsuario, idReto)
       );
     `);
-    console.log('Tabla interesados lista.');
   } catch (error) {
-    console.error('Error al crear tabla interesados:', error);
+    console.error("Error al crear tabla interesados:", error);
   }
 };
 
@@ -29,7 +29,7 @@ export const estaMarcado = (email, idReto) => {
     );
     return !!row;
   } catch (error) {
-    console.error('Error al verificar si ya está marcado:', error);
+    console.error("Error al verificar si ya está marcado:", error);
     return false;
   }
 };
@@ -39,7 +39,6 @@ export const marcarComoInteresado = async (email, reto) => {
   const db = getDatabase();
   try {
     if (estaMarcado(email, reto.id)) {
-      console.log('Ya está marcado como interesado.');
       return false;
     }
 
@@ -47,12 +46,11 @@ export const marcarComoInteresado = async (email, reto) => {
       `INSERT INTO interesados (emailUsuario, idReto) VALUES (?, ?);`,
       [email, reto.id]
     );
-    console.log(`Reto ${reto.nombre} marcado como interesante.`);
-
+   
     await programarNotificacionesDelReto(reto);
     return true;
   } catch (error) {
-    console.error('Error al marcar como interesado:', error);
+    console.error("Error al marcar como interesado:", error);
     return false;
   }
 };
@@ -70,7 +68,7 @@ export const getRetosInteresados = (email) => {
     );
     return rows;
   } catch (error) {
-    console.error('Error al obtener retos interesados:', error);
+    console.error("Error al obtener retos interesados:", error);
     return [];
   }
 };
@@ -93,35 +91,51 @@ export const programarNotificacionesDelReto = async (reto) => {
       inicioSoloFecha.setHours(0, 0, 0, 0);
 
       // Si el reto comienza mañana o en el futuro
-      if (inicioSoloFecha.getTime() === tomorrow.getTime()) { // Comienza mañana
+      if (inicioSoloFecha.getTime() === tomorrow.getTime()) {
+        const fechaNotif = new Date(tomorrow);
+        fechaNotif.setHours(9, 0, 0, 0);
+
+        // Comienza mañana
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: 'EcoChallenge',
+            title: "EcoChallenge",
             body: `¡El reto "${reto.nombre}" comienza mañana! Prepárate.`,
           },
           trigger: {
-            type: 'date',
+            type: "date",
             date: new Date(tomorrow.setHours(9, 0, 0)), // Ejemplo: Mañana a las 9 AM
           },
         });
+
+        insertarNotificacion(
+          reto.id,
+          "EcoChallenge",
+          `¡El reto "${reto.nombre}" comienza mañana! Prepárate.`,
+          fechaNotif
+        );
       }
-     
-      else if (inicioSoloFecha > tomorrow) { // Si el inicio es más allá de mañana, se programa para el día del inicio.
-         await Notifications.scheduleNotificationAsync({
-          content: {
-            title: 'EcoChallenge',
-            body: `¡Hoy comienza el reto: "${reto.nombre}"!`,
-          },
-          trigger: {
-            type: 'date',
-            date: inicio, // Usa la fecha y hora original de inicio para el trigger
-          },
-        });
-      }
+    } else if (inicioSoloFecha > tomorrow) {
+      // Si el inicio es más allá de mañana, se programa para el día del inicio.
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "EcoChallenge",
+          body: `¡Hoy comienza el reto: "${reto.nombre}"!`,
+        },
+        trigger: {
+          type: "date",
+          date: inicio, // Usa la fecha y hora original de inicio para el trigger
+        },
+      });
+
+      insertarNotificacion(
+        reto.id,
+        "EcoChallenge",
+        `¡Hoy comienza el reto: "${reto.nombre}"!`,
+        fechaNotif
+      );
     }
 
-
-    // Notificaciones de FECHA LÍMITE (si termina hoy o mañana) 
+    // Notificaciones de FECHA LÍMITE (si termina hoy o mañana)
     if (reto.fechaLimite) {
       const fin = new Date(reto.fechaLimite);
       const finSoloFecha = new Date(reto.fechaLimite);
@@ -129,45 +143,77 @@ export const programarNotificacionesDelReto = async (reto) => {
 
       // Notificación si el reto termina HOY (y aún no ha pasado la hora)
       if (finSoloFecha.getTime() === today.getTime() && fin > now) {
+        const fechaNotif = new Date(fin);
+        fechaNotif.setHours(9, 0, 0, 0);
+
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: 'EcoChallenge',
+            title: "EcoChallenge",
             body: `¡Último día para completar el reto: "${reto.nombre}"!`,
           },
           trigger: {
-            type: 'date',
+            type: "date",
             date: fin, // Se dispara a la hora de fin real
           },
         });
+
+        insertarNotificacion(
+          reto.id,
+          "EcoChallenge",
+          `¡Último día para completar el reto: "${reto.nombre}"!`,
+          fechaNotif
+        );
       }
+
       // Notificación si el reto termina MAÑANA
       else if (finSoloFecha.getTime() === tomorrow.getTime()) {
+        const fechaNotif = new Date(tomorrow);
+        fechaNotif.setHours(9, 0, 0, 0);
+
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: 'EcoChallenge',
+            title: "EcoChallenge",
             body: `¡Atención! El reto "${reto.nombre}" termina mañana. ¡No lo dejes para última hora!`,
           },
           trigger: {
-            type: 'date',
+            type: "date",
             date: new Date(tomorrow.setHours(9, 0, 0)), // Ejemplo: Mañana a las 9 AM
           },
         });
+
+        insertarNotificacion(
+          reto.id,
+          "EcoChallenge",
+          `¡Atención! El reto "${reto.nombre}" termina mañana. ¡No lo dejes para última hora!`,
+          fechaNotif
+        );
       }
-       // Notificación si el reto termina en el futuro (más allá de mañana)
+
+      // Notificación si el reto termina en el futuro (más allá de mañana)
       else if (finSoloFecha > tomorrow) {
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: 'EcoChallenge',
-              body: `¡Último día para completar el reto: "${reto.nombre}"!`,
-            },
-            trigger: {
-              type: 'date',
-              date: fin, // Se dispara a la hora de fin real
-            },
-          });
+        const fechaNotif = new Date(fin);
+        fechaNotif.setHours(9, 0, 0, 0);
+
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "EcoChallenge",
+            body: `¡Último día para completar el reto: "${reto.nombre}"!`,
+          },
+          trigger: {
+            type: "date",
+            date: fin, // Se dispara a la hora de fin real
+          },
+        });
+
+        insertarNotificacion(
+          reto.id,
+          "EcoChallenge",
+          `¡Último día para completar el reto: "${reto.nombre}"!`,
+          fechaNotif
+        );
       }
     }
   } catch (error) {
-    console.error('Error al programar notificaciones del reto:', error);
+    console.error("Error al programar notificaciones del reto:", error);
   }
 };

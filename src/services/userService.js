@@ -33,25 +33,20 @@ export const initDB = () => {
           VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
         ["Admin", "admin@eco.com", 99, "Centro", "", "admin", "admin123", 0]
       );
-      console.log("Usuario admin insertado por defecto.");
-    }
+     }
 
     // Actualizar usuarios existentes si no tienen la columna 'puntos' 
     try {
       dbInstance.execSync(
         "ALTER TABLE usuarios ADD COLUMN puntos INTEGER DEFAULT 0;"
       );
-      console.log(
-        "Columna 'puntos' añadida a la tabla 'usuarios' (si no existía)."
-      );
+
     } catch (e) {
       if (!e.message.includes("duplicate column name: puntos")) {
         console.warn("Advertencia al intentar añadir columna 'puntos':", e);
       }
     }
 
-    console.log("Tablas de usuarios y sesión inicializadas o ya existentes.");
-    console.log(dbInstance);
   } catch (error) {
     console.error("Error al inicializar la base de datos (initDB):", error);
     throw error;
@@ -125,9 +120,6 @@ export const updateUserPuntos = (email, nuevosPuntos) => {
       `UPDATE usuarios SET puntos = ? WHERE email = ?;`,
       [nuevosPuntos, email]
     );
-    console.log(
-      `Puntos de ${email} actualizados a ${nuevosPuntos}. Cambios: ${result.changes}`
-    );
     return result.changes > 0;
   } catch (error) {
     console.error(`Error al actualizar puntos para ${email}:`, error);
@@ -193,7 +185,6 @@ export const cerrarSesion = () => {
   const dbInstance = getDatabase();
   try {
     dbInstance.execSync("DELETE FROM sesion;");
-    console.log("Sesión eliminada de la base de datos.");
   } catch (error) {
     console.error("Error al cerrar sesión:", error);
     throw error;

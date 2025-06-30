@@ -1,15 +1,16 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 
-import AdminPanelScreen from "../screens/AdminPanelScreen";
-import RetoScreen from "../screens/RetoScreen";
-import MaterialScreen from "../screens/MaterialScreen";
-import CategoriaScreen from "../screens/CategoriaScreen";
-import RevisionesScreen from "../screens/RevisionesScreen";
-import RevisarRetoScreen from "../screens/RevisarRetoScreen";
-import ListaRetosAdminScreen from "../screens/ListaRetosAdminScreen";
-import ListaMaterialesAdminScreen from "../screens/ListaMaterialesAdminScreen";
-import ListaCategoriasAdminScreen from "../screens/ListaCategoriasAdminScreen";
+import AdminPanelScreen from "../screens/Admin/AdminPanelScreen";
+import RetoScreen from "../screens/Retos/RetoScreen";
+import MaterialScreen from "../screens/Materiales/MaterialScreen";
+import CategoriaScreen from "../screens/Categorias/CategoriaScreen";
+import RevisionesScreen from "../screens/Revisiones/RevisionesScreen";
+import RevisarRetoScreen from "../screens/Revisiones/RevisarRetoScreen";
+import ListaRetosAdminScreen from "../screens/Retos/ListaRetosAdminScreen";
+import ListaMaterialesAdminScreen from "../screens/Materiales/ListaMaterialesAdminScreen";
+import ListaCategoriasAdminScreen from "../screens/Categorias/ListaCategoriasAdminScreen";
+import EstadisticasZonaScreen from "../screens/Estadisticas/EstadisticasZonaScreen";
 
 const Stack = createStackNavigator();
 
@@ -60,6 +61,11 @@ export default function AdminStack() {
         name="RevisarReto"
         component={RevisarRetoScreen}
         options={{ title: "Participaciones del Reto" }}
+      />
+      <Stack.Screen
+        name="EstadisticasZona"
+        component={EstadisticasZonaScreen}
+        options={{ title: "Estadísticas por Zona" }}
       />
     </Stack.Navigator>
   );

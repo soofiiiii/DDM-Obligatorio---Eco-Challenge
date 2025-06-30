@@ -17,7 +17,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "runtimeVersion": "1.0.0"
     },
     "plugins": [
       "expo-sqlite",
@@ -52,6 +53,14 @@
         "projectId": "e4461ac9-12a5-41e2-8446-7620369c1071"
       }
     },
-    "owner": "soofiiiii"
+    "owner": "soofiiiii",
+    "updates": {
+      "url": "https://u.expo.dev/e4461ac9-12a5-41e2-8446-7620369c1071"
+    },
+    "ios": {
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
+    }
   }
 }

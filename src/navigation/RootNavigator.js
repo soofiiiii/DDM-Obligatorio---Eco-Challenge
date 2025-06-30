@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import MainStack from "./MainStack";
 import AuthTabs from "./AuthTabs";
 
+
 const Stack = createNativeStackNavigator();
 
 export default function RootNavigator() {

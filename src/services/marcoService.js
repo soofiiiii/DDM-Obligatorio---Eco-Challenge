@@ -1,9 +1,9 @@
 import { getDatabase } from "../database/db";
-import { MARCOS_DISPONIBLES } from '../utils/marcos';
+import { MARCOS_DISPONIBLES } from "../utils/marcos";
 
 // Inicializa la tabla de marcos
-export const initMarcos = () => { 
-  const db = getDatabase(); 
+export const initMarcos = () => {
+  const db = getDatabase();
   try {
     db.execSync(`
       CREATE TABLE IF NOT EXISTS marcos_usuario (
@@ -18,28 +18,30 @@ export const initMarcos = () => {
         idMarco INTEGER NOT NULL
       );
     `);
-    console.log('Tablas de marcos inicializadas o ya existentes.');
   } catch (error) {
-    console.error('Error al inicializar las tablas de marcos:', error);
+    console.error("Error al inicializar las tablas de marcos:", error);
     throw error;
   }
 };
 
 export const obtenerMarcos = () => MARCOS_DISPONIBLES;
 
-export const obtenerMarcosUsuario = (email) => { 
+export const obtenerMarcosUsuario = (email) => {
   const db = getDatabase();
   try {
-    const rows = db.getAllSync(`SELECT idMarco FROM marcos_usuario WHERE emailUsuario = ?;`, [email]);
-    return rows.map(m => m.idMarco);
+    const rows = db.getAllSync(
+      `SELECT idMarco FROM marcos_usuario WHERE emailUsuario = ?;`,
+      [email]
+    );
+    return rows.map((m) => m.idMarco);
   } catch (error) {
     console.error(`Error al obtener marcos de usuario para ${email}:`, error);
     return []; // Devuelve un array vacío en caso de error
   }
 };
 
-export const adquirirMarco = (email, idMarco) => { 
-  const db = getDatabase(); 
+export const adquirirMarco = (email, idMarco) => {
+  const db = getDatabase();
   try {
     // Primero, verifica si ya lo tiene para evitar errores de clave primaria
     const existing = db.getFirstSync(
@@ -48,14 +50,12 @@ export const adquirirMarco = (email, idMarco) => {
     );
 
     if (existing) {
-      console.log(`Marco ${idMarco} ya adquirido por ${email}.`);
-      return false; // No se adquirió (ya lo tenía)
+       return false; // No se adquirió (ya lo tenía)
     } else {
       const result = db.runSync(
         `INSERT INTO marcos_usuario (emailUsuario, idMarco) VALUES (?, ?);`,
         [email, idMarco]
       );
-      console.log(`Marco ${idMarco} adquirido por ${email} con éxito.`);
       return result.changes > 0; // true si se insertó, false si no
     }
   } catch (error) {
@@ -64,8 +64,8 @@ export const adquirirMarco = (email, idMarco) => {
   }
 };
 
-export const establecerMarcoSeleccionado = (email, idMarco) => { 
-  const db = getDatabase(); 
+export const establecerMarcoSeleccionado = (email, idMarco) => {
+  const db = getDatabase();
   try {
     // Verifica si el usuario ya tiene ese marco adquirido
     const acquired = db.getFirstSync(
@@ -75,7 +75,7 @@ export const establecerMarcoSeleccionado = (email, idMarco) => {
 
     if (!acquired) {
       // Si el usuario no ha adquirido el marco, no puede seleccionarlo
-      throw new Error('El usuario no ha adquirido este marco.');
+      throw new Error("El usuario no ha adquirido este marco.");
     }
 
     // INSERT OR REPLACE: si ya existe una selección para este usuario, la actualiza
@@ -84,10 +84,12 @@ export const establecerMarcoSeleccionado = (email, idMarco) => {
       `INSERT OR REPLACE INTO marco_seleccionado (emailUsuario, idMarco) VALUES (?, ?);`,
       [email, idMarco]
     );
-    console.log(`Marco ${idMarco} establecido como seleccionado para ${email}.`);
     return result.changes > 0; // true si se insertó/actualizó
   } catch (error) {
-    console.error(`Error al establecer marco ${idMarco} seleccionado para ${email}:`, error);
+    console.error(
+      `Error al establecer marco ${idMarco} seleccionado para ${email}:`,
+      error
+    );
     throw error;
   }
 };
